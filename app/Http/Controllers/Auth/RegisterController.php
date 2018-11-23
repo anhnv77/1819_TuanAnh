@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Lecturer;
+use App\Student;
 use App\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -49,9 +51,10 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'level' => ['required','string','min:6']
         ]);
     }
 
@@ -63,10 +66,26 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
+        $data_user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'level' => $data['level'],
+            'avatar' => ""
         ]);
+        if ($data['level'] === 'student'){
+            Student::create([
+                'user_id' => $data_user['id'],
+                'name' => $data['name'],
+                'student_code' => $data['user_code']
+            ]);
+        } elseif ($data['level'] === 'lecturer'){
+            Lecturer::create([
+                'user_id' => $data_user['id'],
+                'name' => $data['name'],
+                'lecturer_code' => $data['user_code']
+            ]);
+        }
+        return $data_user;
     }
 }
